@@ -1,0 +1,58 @@
+# 開発用 docker-compose
+# 使用方法: docker-compose -f docker-compose.dev.yml up
+
+services:
+  # PostgreSQLデータベース
+  postgres:
+    image: postgres:15-alpine
+    container_name: zaigo-postgres-dev
+    environment:
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - zaigo-network-dev
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U inventory -d inventory_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # バックエンドAPI (Go) - ホットリロード対応
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zaigo-backend-dev
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: inventory
+      DB_PASSWORD: password
+      DB_NAME: inventory_db
+      API_PORT: 8080
+      LOG_LEVEL: debug
+      JWT_SECRET: dev-secret-key
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zaigo-network-dev
+    volumes:
+      - ./backend:/app
+      - ./logs:/app/logs
+
+volumes:
+  postgres_data_dev:
+
+
+networks:
+  zaigo-network-dev:
+    driver: bridge

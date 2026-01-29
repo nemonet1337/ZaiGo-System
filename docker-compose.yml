@@ -1,0 +1,71 @@
+services:
+  # PostgreSQLデータベース
+  postgres:
+    image: postgres:15-alpine
+    container_name: zaigo-postgres
+    environment:
+      POSTGRES_USER: inventory
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: inventory_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
+    networks:
+      - zaigo-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U inventory -d inventory_db" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # バックエンドAPI (Go)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zaigo-backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: inventory
+      DB_PASSWORD: password
+      DB_NAME: inventory_db
+      API_PORT: 8080
+      LOG_LEVEL: info
+      JWT_SECRET: your-secret-key-change-in-production
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - zaigo-network
+    volumes:
+      - ./logs:/app/logs
+
+  # フロントエンド (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://backend:8080/api/v1
+    container_name: zaigo-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:8080/api/v1
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - zaigo-network
+
+volumes:
+  postgres_data:
+
+
+networks:
+  zaigo-network:
+    driver: bridge
