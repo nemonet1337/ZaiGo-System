@@ -143,7 +143,7 @@ func (v *ValuationEngineImpl) calculateLIFO(ctx context.Context, itemID, locatio
 
 // calculateAverage calculates inventory value using weighted average method
 // 加重平均法で在庫価値を計算
-func (v *ValuationEngineImpl) calculateAverage(ctx context.Context, itemID, locationID string, quantity int64) (float64, error) {
+func (v *ValuationEngineImpl) calculateAverage(ctx context.Context, itemID string, _ string, quantity int64) (float64, error) {
 	averageCost, err := v.GetAverageCost(ctx, itemID)
 	if err != nil {
 		return 0, err
@@ -253,9 +253,9 @@ func (a *AnalyticsEngineImpl) CalculateABCClassification(ctx context.Context, lo
 		if err != nil {
 			continue
 		}
-		
+
 		// 年間出庫予想値として在庫数量の10倍を使用（仮定）
-		estimatedAnnualSales := float64(stock.Quantity * 10) * item.UnitCost
+		estimatedAnnualSales := float64(stock.Quantity*10) * item.UnitCost
 		itemValues[stock.ItemID] = estimatedAnnualSales
 	}
 
@@ -286,11 +286,11 @@ func (a *AnalyticsEngineImpl) classifyABC(itemValues map[string]float64) map[str
 	// ABC分類（80-15-5の法則）
 	classification := make(map[string]string)
 	cumulativeValue := 0.0
-	
+
 	for _, item := range items {
 		cumulativeValue += item.Value
 		percentage := cumulativeValue / totalValue
-		
+
 		if percentage <= 0.8 {
 			classification[item.ItemID] = "A"
 		} else if percentage <= 0.95 {
@@ -331,7 +331,7 @@ func (a *AnalyticsEngineImpl) GetTurnoverRate(ctx context.Context, itemID string
 
 	// 回転率 = 期間中の出庫量 / 平均在庫量
 	turnoverRate := float64(outboundQuantity) / float64(avgInventory)
-	
+
 	// 年間回転率に換算
 	daysInPeriod := period.Hours() / 24
 	yearlyTurnoverRate := turnoverRate * (365 / daysInPeriod)
