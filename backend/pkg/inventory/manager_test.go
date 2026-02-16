@@ -15,12 +15,12 @@ type MockStorage struct {
 	mock.Mock
 }
 
-func (m *MockStorage) Begin(ctx context.Context) (Transaction, error) {
+func (m *MockStorage) Begin(ctx context.Context) (any, error) {
 	args := m.Called(ctx)
 	if args.Get(0) == nil {
-		return Transaction{}, args.Error(1)
+		return nil, args.Error(1)
 	}
-	return args.Get(0).(Transaction), args.Error(1)
+	return args.Get(0), args.Error(1)
 }
 
 func (m *MockStorage) CreateStock(ctx context.Context, stock *Stock) error {
@@ -128,6 +128,21 @@ func (m *MockStorage) Ping(ctx context.Context) error {
 func (m *MockStorage) Close() error {
 	args := m.Called()
 	return args.Error(0)
+}
+
+func (m *MockStorage) GetTotalStockByItem(ctx context.Context, itemID string) (int64, error) {
+	args := m.Called(ctx, itemID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockStorage) GetTransactionHistoryByLocation(ctx context.Context, locationID string, limit int) ([]Transaction, error) {
+	args := m.Called(ctx, locationID, limit)
+	return args.Get(0).([]Transaction), args.Error(1)
+}
+
+func (m *MockStorage) GetTransactionHistoryByDateRange(ctx context.Context, itemID string, from, to time.Time) ([]Transaction, error) {
+	args := m.Called(ctx, itemID, from, to)
+	return args.Get(0).([]Transaction), args.Error(1)
 }
 
 // TestManager_Add は在庫追加機能のテスト

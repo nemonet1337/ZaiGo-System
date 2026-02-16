@@ -147,14 +147,38 @@ class ApiClient {
             this.request<import('@/types').Lot[]>(`/lots/expiring?days=${days}`),
         getExpired: () =>
             this.request<import('@/types').Lot[]>('/lots/expired'),
+        getHistory: (lotNumber: string) =>
+            this.request<import('@/types').Transaction[]>(`/lots/${lotNumber}/history`),
+    };
+
+    // ユーザー管理
+    users = {
+        list: (page = 1, pageSize = 20) =>
+            this.request<import('@/types').PaginatedResponse<import('@/types').User>>(`/users?offset=${(page - 1) * pageSize}&limit=${pageSize}`),
+        get: (id: string) =>
+            this.request<import('@/types').User>(`/users/${id}`),
+        create: (data: import('@/types').CreateUserRequest) =>
+            this.request<import('@/types').User>('/users', { method: 'POST', body: data }),
+        update: (id: string, data: import('@/types').UpdateUserRequest) =>
+            this.request<import('@/types').User>(`/users/${id}`, { method: 'PUT', body: data }),
+        delete: (id: string) =>
+            this.request(`/users/${id}`, { method: 'DELETE' }),
+    };
+
+    // ロール管理
+    roles = {
+        list: () =>
+            this.request<import('@/types').RoleInfo[]>('/roles'),
     };
 
     // 監査ログ
     audit = {
-        list: (params: { userId?: string; action?: string; from?: string; to?: string; page?: number }) =>
+        list: (params: { userId?: string; action?: string; from?: string; to?: string; page?: number; pageSize?: number }) =>
             this.request<import('@/types').PaginatedResponse<import('@/types').AuditLog>>(
                 `/audit?${new URLSearchParams(params as Record<string, string>).toString()}`
             ),
+        exportCsv: (params: { userId?: string; action?: string; from?: string; to?: string }) =>
+            `${this.baseUrl}/audit/export?${new URLSearchParams(params as Record<string, string>).toString()}`,
     };
 }
 

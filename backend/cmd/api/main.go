@@ -189,6 +189,20 @@ func setupRouter(handlers *Handlers, authHandler *auth.Handler, authMiddleware *
 	protectedApi.HandleFunc("/analytics/slow-moving/{locationId}", handlers.GetSlowMovingItems).Methods("GET")
 	protectedApi.HandleFunc("/analytics/report/{locationId}", handlers.GenerateStockReport).Methods("GET")
 
+	// ユーザー管理（認証必須）
+	protectedApi.HandleFunc("/users", authHandler.ListUsers).Methods("GET")
+	protectedApi.HandleFunc("/users", authHandler.CreateUser).Methods("POST")
+	protectedApi.HandleFunc("/users/{userId}", authHandler.GetUser).Methods("GET")
+	protectedApi.HandleFunc("/users/{userId}", authHandler.UpdateUser).Methods("PUT")
+	protectedApi.HandleFunc("/users/{userId}", authHandler.DeleteUser).Methods("DELETE")
+
+	// ロール管理（認証必須）
+	protectedApi.HandleFunc("/roles", authHandler.ListRoles).Methods("GET")
+
+	// 監査ログ（認証必須）
+	protectedApi.HandleFunc("/audit", authHandler.ListAuditLogs).Methods("GET")
+	protectedApi.HandleFunc("/audit/export", authHandler.ExportAuditLogs).Methods("GET")
+
 	// CORS設定（開発用）
 	router.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

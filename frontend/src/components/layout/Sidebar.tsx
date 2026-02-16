@@ -14,6 +14,9 @@ import {
     ExclamationTriangleIcon,
     ChartBarIcon,
     ArrowRightOnRectangleIcon,
+    UsersIcon,
+    ShieldCheckIcon,
+    DocumentMagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 
 const navigation = [
@@ -27,6 +30,12 @@ const navigation = [
     { name: 'レポート', href: '/reports', icon: ChartBarIcon },
 ];
 
+const adminNavigation = [
+    { name: 'ユーザー管理', href: '/admin/users', icon: UsersIcon },
+    { name: 'ロール管理', href: '/admin/roles', icon: ShieldCheckIcon },
+    { name: '監査ログ', href: '/admin/audit-logs', icon: DocumentMagnifyingGlassIcon },
+];
+
 export function Sidebar() {
     const pathname = usePathname();
     const { user, logout } = useAuth();
@@ -36,6 +45,8 @@ export function Sidebar() {
         window.location.href = '/login';
     };
 
+    const isAdmin = user?.role === 'SYSTEM_ADMIN';
+
     return (
         <div className="flex h-full w-64 flex-col bg-slate-900">
             {/* ロゴ */}
@@ -44,8 +55,8 @@ export function Sidebar() {
                 <span className="ml-3 text-xl font-bold text-white">ZaiGo</span>
             </div>
 
-            {/* ナビゲーション */}
-            <nav className="flex-1 space-y-1 px-3 py-4">
+            {/* メインナビゲーション */}
+            <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
                 {navigation.map((item) => {
                     const isActive = pathname === item.href ||
                         (item.href !== '/' && pathname.startsWith(item.href));
@@ -66,6 +77,34 @@ export function Sidebar() {
                         </Link>
                     );
                 })}
+
+                {/* 管理メニュー（システム管理者のみ） */}
+                {isAdmin && (
+                    <>
+                        <div className="pt-4 pb-2 px-3">
+                            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">管理</p>
+                        </div>
+                        {adminNavigation.map((item) => {
+                            const isActive = pathname.startsWith(item.href);
+                            return (
+                                <Link
+                                    key={item.name}
+                                    href={item.href}
+                                    className={`
+                    group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors
+                    ${isActive
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                                        }
+                  `}
+                                >
+                                    <item.icon className={`mr-3 h-5 w-5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                                    {item.name}
+                                </Link>
+                            );
+                        })}
+                    </>
+                )}
             </nav>
 
             {/* ユーザー情報 */}
@@ -91,3 +130,4 @@ export function Sidebar() {
         </div>
     );
 }
+

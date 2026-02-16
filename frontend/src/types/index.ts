@@ -139,12 +139,49 @@ export type AlertType = 'low_stock' | 'over_stock' | 'expiring' | 'expired' | 'd
 export interface AuditLog {
     id: string;
     userId: string;
+    userName?: string;
     action: string;
     entityType: string;
     entityId: string;
     details: Record<string, unknown>;
     ipAddress: string;
     createdAt: string;
+}
+
+// 権限関連
+export type Permission =
+    | 'inventory:read'
+    | 'inventory:write'
+    | 'master:read'
+    | 'master:write'
+    | 'stocktaking:read'
+    | 'stocktaking:write'
+    | 'report:read'
+    | 'audit:read'
+    | 'user:manage';
+
+export interface RoleInfo {
+    role: UserRole;
+    label: string;
+    description: string;
+    permissions: Permission[];
+}
+
+// ユーザー管理リクエスト
+export interface CreateUserRequest {
+    email: string;
+    name: string;
+    password: string;
+    role: UserRole;
+    locationId?: string;
+}
+
+export interface UpdateUserRequest {
+    name?: string;
+    email?: string;
+    role?: UserRole;
+    locationId?: string;
+    isActive?: boolean;
 }
 
 // API レスポンス
